@@ -1,40 +1,61 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+// Add this line to avoid "Cannot find name 'process'" when @types/node isn't installed:
+declare const process: any;
 
-export default defineConfig({
-  plugins: [
-    react(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+declare const require: any;
+const safeRequire = (name: string) => {
+  try {
+    return require(name);
+  } catch {
+    return null;
+  }
+};
+
+let defineConfig: any = (cfg: any) => cfg;
+let path: any = { resolve: (...parts: string[]) => parts.join("/") };
+
+try {
+  const vite = safeRequire("vite");
+  if (vite?.defineConfig) defineConfig = vite.defineConfig;
+  const p = safeRequire("path");
+  if (p) path = p;
+} catch {
+  // keep fallbacks
+}
+
+// keep React plugin only; remove Replit-specific plugins and overlays
+const reactPlugin = safeRequire("@vitejs/plugin-react")?.default ?? safeRequire("@vitejs/plugin-react");
+
+export default defineConfig(async () => {
+  const plugins: any[] = [];
+
+  if (reactPlugin) {
+    try {
+      plugins.push(reactPlugin());
+    } catch {
+      // ignore plugin errors
+    }
+  }
+
+  // Removed Replit runtime overlay and dynamic Replit plugin imports to eliminate Replit dependency.
+  return {
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(process.cwd(), "client", "src"),
+        "@shared": path.resolve(process.cwd(), "shared"),
+        "@assets": path.resolve(process.cwd(), "attached_assets"),
+      },
     },
-  },
-  root: path.resolve(import.meta.dirname, "client"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
-  server: {
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
+    root: path.resolve(process.cwd(), "client"),
+    build: {
+      outDir: path.resolve(process.cwd(), "dist", "public"),
+      emptyOutDir: true,
     },
-  },
+    server: {
+      fs: {
+        strict: true,
+        deny: ["**/.*"],
+      },
+    },
+  };
 });

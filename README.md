@@ -1,8 +1,8 @@
-# ShopAI - AI-Powered Shopping Assistant
+
 
 ## Overview
 
-ShopAI is an AI-powered shopping assistant that helps users find the best products at the best prices across multiple retailers. The application combines natural language search with OpenAI's GPT models to understand user intent and provide intelligent product recommendations. It features a modern e-commerce interface with AI-generated insights, product comparisons, and a room visualization tool for furniture shopping.
+ShoppingBuddy is an AI-powered shopping assistant that helps users find the best products at the best prices across multiple retailers. The application combines natural language search with OpenAI's GPT models to understand user intent and provide intelligent product recommendations. It features a modern e-commerce interface with AI-generated insights, product comparisons, and a room visualization tool for furniture shopping.
 
 ## User Preferences
 
@@ -169,9 +169,29 @@ Preferred communication style: Simple, everyday language.
 - `@replit/vite-plugin-dev-banner` - Development banner
 - `@replit/vite-plugin-runtime-error-modal` - Error overlay
 
-### Session Management
+## What the .replit file was for
+- The `.replit` file is a Replit-specific configuration that tells the Replit IDE how to run, build, and deploy the project (runtime modules, ports, env values, workflows, and development plugins). If you are not using Replit, it is safe to remove.
 
-**Connect-pg-simple**
-- PostgreSQL session store for Express sessions
-- Persists user sessions to database
-- Configured for production use with database connection pooling
+## How to run locally
+1. Install deps:
+   npm install
+2. Development:
+   npm run dev
+3. Build:
+   npm run build
+4. Production start:
+   npm start
+
+## If you removed `.replit`
+- Search for other Replit traces and remove them if desired:
+  - Files: `.replit`, `replit.nix`, `.replit_history`, `repl.it`
+  - Package.json dev plugins mentioning `@replit/*`
+- Git commands (example):
+  - git rm .replit
+  - git add README.md
+  - git commit -m "Remove Replit config; add README"
+  - git push origin main
+
+## Notes
+- Back up before rewriting history or deleting files.
+- If you want, I can also provide a git mv command to rename the file instead of deleting it.

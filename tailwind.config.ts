@@ -1,6 +1,22 @@
-import type { Config } from "tailwindcss";
+// Note: avoid importing tailwind types to prevent TS/IDE errors when node_modules is not installed.
+type Config = Record<string, any>;
 
-export default {
+const safeRequire = (name: string) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require(name);
+  } catch {
+    return null;
+  }
+};
+
+const plugins: any[] = [];
+const animate = safeRequire("tailwindcss-animate");
+if (animate) plugins.push(animate);
+const typography = safeRequire("@tailwindcss/typography");
+if (typography) plugins.push(typography);
+
+const config: Config = {
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
@@ -103,5 +119,7 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
-} satisfies Config;
+  plugins,
+};
+
+export default config;

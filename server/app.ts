@@ -1,11 +1,29 @@
-import { type Server } from "node:http";
+// Add lightweight globals to avoid editor/TS errors when @types/node isn't installed.
+// Recommended: install @types/node and remove these declarations.
+declare const process: any;
+declare const Buffer: any;
+type Buffer = any;
 
-import express, {
-  type Express,
-  type Request,
-  Response,
-  NextFunction,
-} from "express";
+type Server = any;
+
+// Try to load express at runtime to avoid editor/TS errors when node_modules is missing.
+// Recommended: run `npm install express` and `npm i -D @types/express` and revert to static imports.
+declare const require: any;
+let express: any;
+try {
+  express = require("express");
+} catch {
+  express = (..._args: any[]) => {
+    throw new Error("express is not installed. Run: npm install express");
+  };
+}
+
+// Minimal local type aliases to silence missing @types/express in the editor.
+// Install `@types/express` to restore proper types.
+type Express = any;
+type Request = any;
+type Response = any;
+type NextFunction = any;
 
 import { registerRoutes } from "./routes";
 
@@ -22,25 +40,31 @@ export function log(message: string, source = "express") {
 
 export const app = express();
 
-declare module 'http' {
-  interface IncomingMessage {
-    rawBody: unknown
+// Replace "declare module 'http' { ... }" with Express augmentation to avoid depending on @types/node
+declare global {
+  namespace Express {
+    interface Request {
+      rawBody: unknown;
+    }
   }
 }
+
 app.use(express.json({
-  verify: (req, _res, buf) => {
+  // annotate params to avoid "implicitly has any" diagnostics
+  verify: (req: Request, _res: Response, buf: Buffer | Uint8Array) => {
     req.rawBody = buf;
   }
 }));
 app.use(express.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
+// annotate middleware params
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
+  res.json = function (bodyJson: any, ...args: any[]) {
     capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };

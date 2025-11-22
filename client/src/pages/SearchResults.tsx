@@ -12,7 +12,8 @@ export default function SearchResults() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1]);
+    const searchParams = window.location.search;
+    const params = new URLSearchParams(searchParams);
     const q = params.get("q") || "";
     setQuery(q);
   }, [location]);

@@ -55,3 +55,35 @@ export const roomVisualizationSchema = z.object({
 });
 
 export type RoomVisualization = z.infer<typeof roomVisualizationSchema>;
+
+export const searchRequestSchema = z.object({
+  query: z.string().min(1, "Search query is required"),
+});
+
+export type SearchRequest = z.infer<typeof searchRequestSchema>;
+
+export const aiSummarySchema = z.object({
+  summary: z.string(),
+  insights: z.array(z.string()),
+});
+
+export type AISummary = z.infer<typeof aiSummarySchema>;
+
+export const searchResponseSchema = z.object({
+  query: z.string(),
+  aiSummary: aiSummarySchema,
+  products: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    price: z.string(),
+    originalPrice: z.string().optional(),
+    rating: z.number(),
+    reviewCount: z.number(),
+    store: z.string(),
+    category: z.string(),
+    imageUrl: z.string(),
+  })),
+});
+
+export type SearchResponse = z.infer<typeof searchResponseSchema>;

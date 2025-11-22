@@ -29,6 +29,26 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    const [url, ...params] = queryKey;
+    
+    // If there are additional parameters, it's a POST request (for search)
+    if (params.length > 0 && params[0]) {
+      const res = await fetch(url as string, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: params[0] }),
+        credentials: "include",
+      });
+
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    }
+    
+    // Otherwise, it's a GET request
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
     });

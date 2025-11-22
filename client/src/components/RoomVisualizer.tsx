@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import emptyRoomImage from "@assets/generated_images/empty_room_for_visualization.png";
+import { useToast } from "@/hooks/use-toast";
 import armchairImage from "@assets/generated_images/velvet_armchair_product.png";
 
 const furnitureOptions = [
@@ -11,30 +11,69 @@ const furnitureOptions = [
 ];
 
 export default function RoomVisualizer() {
+  const { toast } = useToast();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showResult, setShowResult] = useState(false);
+  const [visualizedImage, setVisualizedImage] = useState<string | null>(null);
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setUploadedFile(file);
       const reader = new FileReader();
       reader.onload = (event) => {
         setUploadedImage(event.target?.result as string);
-        setShowResult(false);
+        setVisualizedImage(null);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleGenerate = () => {
-    console.log("Generating visualization with furniture:", selectedFurniture);
+  const handleGenerate = async () => {
+    if (!uploadedFile || selectedFurniture.length === 0) {
+      return;
+    }
+
     setIsGenerating(true);
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData();
+      formData.append("image", uploadedFile);
+      formData.append("furnitureItems", JSON.stringify(
+        selectedFurniture.map(id => {
+          const furniture = furnitureOptions.find(f => f.id === id);
+          return furniture?.name || "";
+        })
+      ));
+
+      const response = await fetch("/api/visualize", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate visualization");
+      }
+
+      const data = await response.json();
+      setVisualizedImage(data.processedImageUrl);
+      
+      toast({
+        title: "Visualization Complete!",
+        description: "Your AI-generated room visualization is ready.",
+      });
+    } catch (error) {
+      console.error("Visualization error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate visualization",
+        variant: "destructive",
+      });
+    } finally {
       setIsGenerating(false);
-      setShowResult(true);
-    }, 2000);
+    }
   };
 
   const toggleFurniture = (id: string) => {
@@ -87,7 +126,8 @@ export default function RoomVisualizer() {
                   className="absolute top-2 right-2"
                   onClick={() => {
                     setUploadedImage(null);
-                    setShowResult(false);
+                    setUploadedFile(null);
+                    setVisualizedImage(null);
                   }}
                   data-testid="button-remove-image"
                 >
@@ -101,16 +141,16 @@ export default function RoomVisualizer() {
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold mb-4" data-testid="text-result-title">
-              {showResult ? "AI Visualization" : "Preview"}
+              {visualizedImage ? "AI Visualization" : "Preview"}
             </h3>
             <div className="h-80 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
               {!uploadedImage ? (
                 <p className="text-sm text-muted-foreground" data-testid="text-no-image">
                   Upload a room photo to get started
                 </p>
-              ) : showResult ? (
+              ) : visualizedImage ? (
                 <img
-                  src={emptyRoomImage}
+                  src={visualizedImage}
                   alt="AI generated visualization"
                   className="w-full h-full object-cover"
                   data-testid="img-visualization-result"

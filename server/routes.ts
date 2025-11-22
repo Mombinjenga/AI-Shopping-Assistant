@@ -141,7 +141,7 @@ Make the products realistic and varied in price. Include sale prices for some it
         quality: "standard",
       });
 
-      const visualizedImageUrl = imageResponse.data[0].url;
+      const visualizedImageUrl = imageResponse.data?.[0]?.url || "";
 
       res.json({
         success: true,

@@ -65,7 +65,6 @@ export const insertUserSchema = _createInsertSchema(users).pick({
   password: true,
 });
 
-// Temporary: use `any` for types that previously used `z.infer<...>`
 // Install `zod` and revert these to `z.infer<typeof ...>` for proper typing.
 export type InsertUser = any;
 export type User = any;

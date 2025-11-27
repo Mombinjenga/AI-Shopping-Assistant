@@ -36,7 +36,7 @@ export default defineConfig(async () => {
     }
   }
 
-  // Removed Replit runtime overlay and dynamic Replit plugin imports to eliminate Replit dependency.
+  
   return {
     plugins,
     resolve: {
